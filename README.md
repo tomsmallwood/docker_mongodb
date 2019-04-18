@@ -19,3 +19,5 @@ Requirements for app.py (e.g. Regis, Flask)
 
 # References
 https://docs.docker.com/get-started/
+https://docs.docker.com/docker-for-mac/
+https://www.dlighthouse.co/2018/03/creating-mongo-replicaset-using-docker.html
