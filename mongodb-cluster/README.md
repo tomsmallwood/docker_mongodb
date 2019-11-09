@@ -2,12 +2,13 @@
 Docker image to install & manage a custom MongoDB cluster in Docker, with Kubernetes/ Docker Compose/ Swarm.
 
 # Setup
-## Docker Compose
+## Docker Run
 `docker login`
-`docker-compose up -d`
+`docker build --tag=latest`
+`docker run -p 4000:80 tsmallwood/mongodb_cluster:latest`
 
 ## View app
-`localhost:80`
+`localhost:4000`
 
 ## Docker Swarm
 `docker swarm init` - Initialise swarm for docker
