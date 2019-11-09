@@ -2,7 +2,7 @@ version: "3"
 services:
 
   pmm-server:
-    image: "percona/pmm-server:1"
+    image: "percona/pmm-server:latest"
     container_name: pmm-server
     ports:
      - "80:80"
@@ -10,21 +10,23 @@ services:
     environment:
      - SERVER_USER=pmm
      - SERVER_PASSWORD=pmm
+    depends_on:
+     - "mongod-1"
 
-  mongo:
+  mongod-1:
     image: mongo
-    container_name: mongo
+    container_name: mongod-1
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongo
       - MONGO_INITDB_ROOT_PASSWORD=secret
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/data/log
     ports:
-      - "27017:27017"
+      - "27031:27031"
     volumes:
-      - ./data/db:/data/db
-      - ./data/log:/data/log
-    command: mongod --dbpath=/data/db --logpath=/data/log/mongodb.log --port 27017
+      - ./data/mongod/27031/db:/data/db
+      - ./data/mongod/27031/log:/data/log
+    command: mongod --port 27031
 
   pmm-client-mongo:
     image: "perconalab/pmm-client:latest"
@@ -34,7 +36,7 @@ services:
      - PMM_USER=pmm
      - PMM_PASSWORD=pmm
      - DB_TYPE=mongodb
-     - DB_ARGS=--uri=mongodb://mongo:secret@mongo:27017
+     - DB_ARGS=--uri=mongodb://mongo:secret@mongod-1:27031
     depends_on:
-     - "mongo"
+     - "mongod-1"
      - "pmm-server"
