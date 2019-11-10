@@ -10,6 +10,57 @@ services:
      - SERVER_USER=pmm
      - SERVER_PASSWORD=pmm
 
+  mongos-1:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/log
+    ports:
+      - "27027:27027"
+    volumes:
+      - ./data/mongod/27027/db:/data/db
+      - ./data/mongod/27027/log:/data/log
+    command: mongod --port 27027
+
+  client-mongos-1:
+    image: "perconalab/pmm-client:latest"
+    restart: on-failure # Waits for mongo process
+    environment:
+     - PMM_SERVER=pmm-server:443
+     - PMM_USER=pmm
+     - PMM_PASSWORD=pmm
+     - DB_TYPE=mongodb
+     - DB_ARGS=--uri=mongodb://mongo:secret@mongos-1:27027
+    depends_on:
+     - "mongos-1"
+     - "server"
+
+  config-1:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/log
+    ports:
+      - "27029:27029"
+    command: mongod --port 27029 --configsvr --replSet configReplSet
+
+  client-config-1:
+    image: "perconalab/pmm-client:latest"
+    restart: on-failure # Waits for mongo process
+    environment:
+     - PMM_SERVER=pmm-server:443
+     - PMM_USER=pmm
+     - PMM_PASSWORD=pmm
+     - DB_TYPE=mongodb
+     - DB_ARGS=--uri=mongodb://mongo:secret@config-1:27029
+    depends_on:
+     - "config-1"
+     - "server"
+
   mongod-1:
     image: mongo
     environment:
@@ -35,4 +86,58 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@mongod-1:27031
     depends_on:
      - "mongod-1"
-     - "pmm-server"
+     - "server"
+
+  mongod-2:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/log
+    ports:
+      - "27032:27032"
+    volumes:
+      - ./data/mongod/27032/db:/data/db
+      - ./data/mongod/27032/log:/data/log
+    command: mongod --port 27032
+
+  client-mongod-2:
+    image: "perconalab/pmm-client:latest"
+    restart: on-failure # Waits for mongo process
+    environment:
+     - PMM_SERVER=pmm-server:443
+     - PMM_USER=pmm
+     - PMM_PASSWORD=pmm
+     - DB_TYPE=mongodb
+     - DB_ARGS=--uri=mongodb://mongo:secret@mongod-2:27032
+    depends_on:
+     - "mongod-2"
+     - "server"
+
+  mongod-3:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/log
+    ports:
+      - "27033:27033"
+    volumes:
+      - ./data/mongod/27033/db:/data/db
+      - ./data/mongod/27033/log:/data/log
+    command: mongod --port 27033
+
+  client-mongod-3:
+    image: "perconalab/pmm-client:latest"
+    restart: on-failure # Waits for mongo process
+    environment:
+     - PMM_SERVER=pmm-server:443
+     - PMM_USER=pmm
+     - PMM_PASSWORD=pmm
+     - DB_TYPE=mongodb
+     - DB_ARGS=--uri=mongodb://mongo:secret@mongod-3:27033
+    depends_on:
+     - "mongod-3"
+     - "server"
