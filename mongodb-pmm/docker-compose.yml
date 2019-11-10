@@ -10,8 +10,6 @@ services:
     environment:
      - SERVER_USER=pmm
      - SERVER_PASSWORD=pmm
-    depends_on:
-     - "mongod-1"
 
   mongod-1:
     image: mongo
@@ -31,6 +29,7 @@ services:
   pmm-client-mongo:
     image: "perconalab/pmm-client:latest"
     container_name: pmm_client
+    restart: on-failure # Waits for mongo process
     environment:
      - PMM_SERVER=pmm-server:443
      - PMM_USER=pmm
