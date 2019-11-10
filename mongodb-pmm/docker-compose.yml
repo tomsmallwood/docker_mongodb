@@ -20,9 +20,9 @@ services:
     ports:
       - "27027:27027"
     volumes:
-      - ./data/mongod/27027/db:/data/db
-      - ./data/mongod/27027/log:/data/log
-    command: mongod --port 27027
+      - ./data/mongos/27027/db:/data/db
+      - ./data/mongos/27027/log:/data/log
+    command: mongod --port 27027 --logpath /data/log/mongos.log
 
   client-mongos-1:
     image: "perconalab/pmm-client:latest"
@@ -46,7 +46,10 @@ services:
       - MONGO_LOG_DIR=/data/log
     ports:
       - "27029:27029"
-    command: mongod --port 27029 --configsvr --replSet configReplSet
+    volumes:
+      - ./data/configsvr/27029/db:/data/db
+      - ./data/configsvr/27029/log:/data/log
+    command: mongod --port 27029 --configsvr --dbpath /data/db --logpath /data/log/mongod.log # --replSet configReplSet
 
   client-config-1:
     image: "perconalab/pmm-client:latest"
@@ -73,7 +76,7 @@ services:
     volumes:
       - ./data/mongod/27031/db:/data/db
       - ./data/mongod/27031/log:/data/log
-    command: mongod --port 27031
+    command: mongod --port 27031 --logpath /data/log/mongod.log
 
   client-mongod-1:
     image: "perconalab/pmm-client:latest"
@@ -100,7 +103,7 @@ services:
     volumes:
       - ./data/mongod/27032/db:/data/db
       - ./data/mongod/27032/log:/data/log
-    command: mongod --port 27032
+    command: mongod --port 27032 --logpath /data/log/mongod.log
 
   client-mongod-2:
     image: "perconalab/pmm-client:latest"
@@ -127,7 +130,7 @@ services:
     volumes:
       - ./data/mongod/27033/db:/data/db
       - ./data/mongod/27033/log:/data/log
-    command: mongod --port 27033
+    command: mongod --port 27033 --logpath /data/log/mongod.log
 
   client-mongod-3:
     image: "perconalab/pmm-client:latest"
