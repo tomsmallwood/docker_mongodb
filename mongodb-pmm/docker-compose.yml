@@ -1,7 +1,7 @@
 version: "3"
 services:
 
-  server:
+  pmm-server:
     image: "percona/pmm-server:latest"
     ports:
      - "80:80"
@@ -35,7 +35,7 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@mongos-1:27027
     depends_on:
      - "mongos-1"
-     - "server"
+     - "pmm-server"
 
   config-1:
     image: mongo
@@ -59,7 +59,7 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@config-1:27029
     depends_on:
      - "config-1"
-     - "server"
+     - "pmm-server"
 
   mongod-1:
     image: mongo
@@ -86,7 +86,7 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@mongod-1:27031
     depends_on:
      - "mongod-1"
-     - "server"
+     - "pmm-server"
 
   mongod-2:
     image: mongo
@@ -113,7 +113,7 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@mongod-2:27032
     depends_on:
      - "mongod-2"
-     - "server"
+     - "pmm-server"
 
   mongod-3:
     image: mongo
@@ -140,4 +140,4 @@ services:
      - DB_ARGS=--uri=mongodb://mongo:secret@mongod-3:27033
     depends_on:
      - "mongod-3"
-     - "server"
+     - "pmm-server"
