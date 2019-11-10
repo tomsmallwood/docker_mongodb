@@ -1,9 +1,8 @@
 version: "3"
 services:
 
-  pmm-server:
+  server:
     image: "percona/pmm-server:latest"
-    container_name: pmm-server
     ports:
      - "80:80"
      - "443:443"
@@ -13,7 +12,6 @@ services:
 
   mongod-1:
     image: mongo
-    container_name: mongod-1
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongo
       - MONGO_INITDB_ROOT_PASSWORD=secret
@@ -26,9 +24,8 @@ services:
       - ./data/mongod/27031/log:/data/log
     command: mongod --port 27031
 
-  pmm-client-mongo:
+  client-mongod-1:
     image: "perconalab/pmm-client:latest"
-    container_name: pmm_client
     restart: on-failure # Waits for mongo process
     environment:
      - PMM_SERVER=pmm-server:443
