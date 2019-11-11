@@ -1,0 +1,224 @@
+---
+
+- hosts: localhost
+  tasks:
+    - name: "Start PMM Server"
+      docker_container:
+        name: pmm-server
+        image: "percona/pmm-server:latest"
+        state: present
+        ports:
+        - "80:80"
+        - "443:443"
+        env:
+          SERVER_USER: pmm
+          SERVER_PASSWORD: pmm
+    
+    - name: "Start Mongos"
+      docker_container:
+        name: "mongos-1"
+        image: mongo
+        restart: always
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27027:27027"
+        volumes:
+          - ./data/mongos/27027/db:/data/db
+          - ./data/mongos/27027/log:/data/log
+        command: mongod --port 27027 --logpath /data/log/mongos.log --configdb configReplSet/config-1:27029,config-2:27129,config-3:27229
+        depends_on:
+        - "config-1"
+        - "config-2"
+        - "config-3"
+
+    - name: "client-mongos-1"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+          - PMM_SERVER=pmm-server:443
+          - PMM_USER=pmm
+          - PMM_PASSWORD=pmm
+          - DB_TYPE=mongodb
+          - DB_ARGS=--uri=mongodb://mongo:secret@mongos-1:27027
+        depends_on:
+          - "mongos-1"
+          - "pmm-server"
+
+    - name: "config-1"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27029:27029"
+        volumes:
+          - ./data/configsvr/27029/db:/data/db
+          - ./data/configsvr/27029/log:/data/log
+        command: mongod --port 27029 --dbpath /data/db --logpath /data/log/mongod.log --configsvr --replSet configReplSet --noauth
+
+    - name: "client-config-1"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+        - PMM_SERVER=pmm-server:443
+        - PMM_USER=pmm
+        - PMM_PASSWORD=pmm
+        - DB_TYPE=mongodb
+        - DB_ARGS=--uri=mongodb://mongo:secret@config-1:27029
+        depends_on:
+        - "config-1"
+        - "pmm-server"
+
+    - name: "config-2"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27129:27129"
+        volumes:
+          - ./data/configsvr/27129/db:/data/db
+          - ./data/configsvr/27129/log:/data/log
+        command: mongod --port 27129 --dbpath /data/db --logpath /data/log/mongod.log --configsvr --replSet configReplSet --noauth
+
+    - name: "client-config-2"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+          - PMM_SERVER=pmm-server:443
+          - PMM_USER=pmm
+          - PMM_PASSWORD=pmm
+          - DB_TYPE=mongodb
+          - DB_ARGS=--uri=mongodb://mongo:secret@config-2:27129
+        depends_on:
+          - "config-2"
+          - "pmm-server"
+
+    - name: "config-3"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27229:27229"
+        volumes:
+          - ./data/configsvr/27229/db:/data/db
+          - ./data/configsvr/27229/log:/data/log
+        command: mongod --port 27229 --dbpath /data/db --logpath /data/log/mongod.log --configsvr --replSet configReplSet --noauth
+
+    - name: "client-config-3"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+          - PMM_SERVER=pmm-server:443
+          - PMM_USER=pmm
+          - PMM_PASSWORD=pmm
+          - DB_TYPE=mongodb
+          - DB_ARGS=--uri=mongodb://mongo:secret@config-3:27229
+        depends_on:
+          - "config-3"
+          - "pmm-server"
+
+    - name: "mongod-1"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27031:27031"
+        volumes:
+          - ./data/mongod/27031/db:/data/db
+          - ./data/mongod/27031/log:/data/log
+        command: mongod --port 27031 --logpath /data/log/mongod.log
+
+    - name: "client-mongod-1"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+        - PMM_SERVER=pmm-server:443
+        - PMM_USER=pmm
+        - PMM_PASSWORD=pmm
+        - DB_TYPE=mongodb
+        - DB_ARGS=--uri=mongodb://mongo:secret@mongod-1:27031
+        depends_on:
+        - "mongod-1"
+        - "pmm-server"
+
+    - name: "mongod-2"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27032:27032"
+        volumes:
+          - ./data/mongod/27032/db:/data/db
+          - ./data/mongod/27032/log:/data/log
+        command: mongod --port 27032 --logpath /data/log/mongod.log
+
+    - name: "client-mongod-2"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+        - PMM_SERVER=pmm-server:443
+        - PMM_USER=pmm
+        - PMM_PASSWORD=pmm
+        - DB_TYPE=mongodb
+        - DB_ARGS=--uri=mongodb://mongo:secret@mongod-2:27032
+        depends_on:
+        - "mongod-2"
+        - "pmm-server"
+
+    - name: "mongod-3"
+      docker_container:
+        image: mongo
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongo
+          - MONGO_INITDB_ROOT_PASSWORD=secret
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/log
+        ports:
+          - "27033:27033"
+        volumes:
+          - ./data/mongod/27033/db:/data/db
+          - ./data/mongod/27033/log:/data/log
+        command: mongod --port 27033 --logpath /data/log/mongod.log
+
+    - name: "client-mongod-3"
+      docker_container:
+        image: "perconalab/pmm-client:latest"
+        restart: on-failure # Waits for mongo process
+        environment:
+        - PMM_SERVER=pmm-server:443
+        - PMM_USER=pmm
+        - PMM_PASSWORD=pmm
+        - DB_TYPE=mongodb
+        - DB_ARGS=--uri=mongodb://mongo:secret@mongod-3:27033
+        depends_on:
+        - "mongod-3"
+        - "pmm-server"
