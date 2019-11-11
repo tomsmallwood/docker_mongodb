@@ -20,12 +20,29 @@ Stop the container:
 ```
 docker stop <Container ID>
 ```
-
+Stop all containers:
+```
+docker stop $(docker ps -aq)
+```
 
 ## Clean Up Project from Docker
 ```
 docker rm $(docker ps -aq) -f
-rm -rf ./data/
+rm -rf ./data/configsvr/*
+rm -rf ./data/mongod/*
+rm -rf ./data/mongos/*
 docker image rm perconalab/pmm-client mongo percona/pmm-server:1 --force
 docker network rm docker_gwbridge mongodb-pmm_default
+```
+
+## Setup CLuster
+REFERENCE: https://dzone.com/articles/composing-a-sharded-mongodb-on-docker
+
+Initiate Configsvr Replica Set:
+```
+docker exec -it mongodb-pmm_config-1_1 bash -c "echo 'rs.initiate({_id: \"configReplSet\",configsvr: true, members: [{ _id : 0, host : \"config-1:27029\" },{ _id : 1, host : \"config-2:27129\" }, { _id : 2, host : \"config-3:27229\" }]})' | mongo --port 27029 -u mongo -p secret --authenticationDatabase admin"
+```
+Or via the container:
+```
+rs.initiate({_id: "configReplSet", configsvr: true, members: [{ _id : 0, host : "config-1:27029" },{ _id : 1, host : "config-2:27129" }, { _id : 2, host : "config-3:27229" }]})
 ```
